@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fbf7ef;
+  --foreground: #4b3a2d;
+  --milk-tea: #d8bfa3;
+  --milk-tea-deep: #9b7658;
+  --cream: #fffaf2;
+  --line: rgba(111, 82, 61, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--background);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(216, 191, 163, 0.35), transparent 30%),
+    linear-gradient(180deg, #fbf7ef 0%, #f3e7d7 100%);
+  color: var(--foreground);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Noto Sans TC", sans-serif;
+  overscroll-behavior-y: none;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.safe-shell {
+  min-height: 100svh;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+}
+
+.glass-card {
+  border: 1px solid var(--line);
+  background: rgba(255, 250, 242, 0.78);
+  box-shadow: 0 24px 70px rgba(82, 61, 45, 0.12);
+  backdrop-filter: blur(18px);
+}
+
+.check-pop {
+  animation: check-pop 0.28s ease-out;
+}
+
+.celebration {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: rgba(75, 58, 45, 0.12);
+  animation: fade-away 2.4s ease-in-out forwards;
+}
+
+.celebration-card {
+  animation: float-in 0.7s cubic-bezier(.2,.9,.2,1.2);
+}
+
+.confetti span {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  width: 8px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--milk-tea);
+  transform: rotate(calc(var(--i) * 30deg)) translateY(-92px);
+  animation: sparkle 1.6s ease-out infinite;
+  animation-delay: calc(var(--i) * -0.04s);
+}
+
+@keyframes check-pop {
+  0% { transform: scale(0.84); }
+  70% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes float-in {
+  from { opacity: 0; transform: translateY(18px) scale(.92); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes fade-away {
+  0%, 75% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+@keyframes sparkle {
+  0% { opacity: 0; transform: rotate(calc(var(--i) * 30deg)) translateY(-38px) scale(.6); }
+  35% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(calc(var(--i) * 30deg)) translateY(-122px) scale(1); }
+}
