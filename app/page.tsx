@@ -58,6 +58,8 @@ export default function Home() {
   }, []);
   const [records, setRecords] = useState<Records>({});
   const [newGoal, setNewGoal] = useState("");
+  const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState("");
   const [showCelebration, setShowCelebration] = useState(false);
   const today = records[todayKey] ?? createRecord(todayKey);
   const completedCount = today.goals.filter((goal) => goal.completed).length;
@@ -113,6 +115,58 @@ export default function Home() {
     });
   };
 
+  const startEditingGoal = (goal: Goal) => {
+    setEditingGoalId(goal.id);
+    setEditingText(goal.text);
+  };
+
+  const cancelEditingGoal = () => {
+    setEditingGoalId(null);
+    setEditingText("");
+  };
+
+  const saveEditingGoal = () => {
+    if (!editingGoalId) return;
+
+    const text = editingText.trim();
+    if (!text) {
+      cancelEditingGoal();
+      return;
+    }
+
+    setRecords((current) => {
+      const record = current[todayKey] ?? createRecord(todayKey);
+      return {
+        ...current,
+        [todayKey]: {
+          ...record,
+          goals: record.goals.map((goal) => (goal.id === editingGoalId ? { ...goal, text } : goal)),
+        },
+      };
+    });
+    cancelEditingGoal();
+  };
+
+  const deleteGoal = (id: string) => {
+    const confirmed = window.confirm("確定要刪除這個目標嗎？");
+    if (!confirmed) return;
+
+    setRecords((current) => {
+      const record = current[todayKey] ?? createRecord(todayKey);
+      return {
+        ...current,
+        [todayKey]: {
+          ...record,
+          goals: record.goals.filter((goal) => goal.id !== id),
+        },
+      };
+    });
+
+    if (editingGoalId === id) {
+      cancelEditingGoal();
+    }
+  };
+
   const weekSummary = useMemo(() => {
     return Array.from({ length: 7 }, (_, index) => {
       const date = new Date();
@@ -158,14 +212,34 @@ export default function Home() {
           <div className="h-full rounded-full bg-[#9b7658] transition-all duration-500" style={{ width: `${completion}%` }} />
         </div>
 
-        <div className="mt-5 space-y-3">
-          {today.goals.map((goal) => (
-            <button key={goal.id} onClick={() => toggleGoal(goal.id)} className="flex w-full items-center gap-3 rounded-2xl border border-[#6f523d]/10 bg-white/55 p-4 text-left active:scale-[0.99]">
-              <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border ${goal.completed ? "check-pop border-[#9b7658] bg-[#9b7658] text-white" : "border-[#cdb498]"}`}>{goal.completed ? "✓" : ""}</span>
-              <span className={goal.completed ? "text-[#8a6c52] line-through" : "text-[#4b3a2d]"}>{goal.text}</span>
-            </button>
-          ))}
-        </div>
+        <ul className="mt-5 space-y-3">
+          {today.goals.map((goal) => {
+            const isEditing = editingGoalId === goal.id;
+
+            return (
+              <li key={goal.id} className="rounded-2xl border border-[#6f523d]/10 bg-white/55 p-3">
+                <div className="flex items-center gap-3">
+                  <button type="button" onClick={() => toggleGoal(goal.id)} aria-label={goal.completed ? "標記為未完成" : "標記為完成"} className="grid h-8 w-8 shrink-0 place-items-center rounded-full active:scale-95">
+                    <span className={`grid h-7 w-7 place-items-center rounded-full ${goal.completed ? "check-pop bg-[#9b7658] text-white" : "border border-[#cdb498]"}`}>{goal.completed ? "✓" : ""}</span>
+                  </button>
+
+                  {isEditing ? (
+                    <div className="flex min-w-0 flex-1 gap-2">
+                      <input value={editingText} onChange={(event) => setEditingText(event.target.value)} onKeyDown={(event) => event.key === "Enter" && saveEditingGoal()} autoFocus className="min-h-11 min-w-0 flex-1 rounded-2xl border border-[#6f523d]/10 bg-[#fffaf2] px-3 outline-none focus:border-[#9b7658]" aria-label="編輯目標內容" />
+                      <button type="button" onClick={saveEditingGoal} disabled={!editingText.trim()} className="min-h-11 rounded-2xl bg-[#4b3a2d] px-4 text-sm font-medium text-white disabled:opacity-35">儲存</button>
+                    </div>
+                  ) : (
+                    <button type="button" onClick={() => startEditingGoal(goal)} className={`min-h-11 min-w-0 flex-1 rounded-xl px-1 text-left active:scale-[0.99] ${goal.completed ? "text-[#8a6c52] line-through" : "text-[#4b3a2d]"}`}>
+                      {goal.text}
+                    </button>
+                  )}
+
+                  <button type="button" onClick={() => deleteGoal(goal.id)} aria-label="刪除目標" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#eadfce]/70 text-xl text-[#9b7658] active:scale-95">×</button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
 
         <div className="mt-4 flex gap-2">
           <input value={newGoal} onChange={(event) => setNewGoal(event.target.value)} onKeyDown={(event) => event.key === "Enter" && addGoal()} disabled={!canAddGoal} placeholder={canAddGoal ? "新增一個溫柔小目標" : "今天的三個目標已滿"} className="min-h-12 flex-1 rounded-2xl border border-[#6f523d]/10 bg-[#fffaf2] px-4 outline-none focus:border-[#9b7658] disabled:opacity-60" />
